@@ -1,0 +1,514 @@
+function logout
+{
+  func
+} 
+
+function scroll
+{
+i=1
+for i in 1 2 3 4 5 6 7 8 9 10 ; do tz[$i]=""; let i=$i+1; done
+i=1; for item in $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ; do tz[$i]="$item"; let i=$i+1; done
+i=1
+while [ 0 ]; do
+  if [ $i -eq 0 ]; then i=1; fi
+  if [ ! ${tz[$i]} ]; then let i=i-1; fi
+  echo -en "\r                            "
+  echo -en "\r${tz[$i]}"
+  read -sn 1 twiddle
+  case "$twiddle" in
+    "B")
+      let i=i+1
+      ;;
+    "A")
+      let i=i-1
+      ;;
+    "")
+        break
+      ;;
+   esac
+done
+echo
+
+} 
+
+function admin
+{ clear
+a=`echo "1.ADD_NEW_USER"`
+b=`echo "2.VIEW_USER_DETAILS"`
+c=`echo "3.REMOVE_USER"`
+d=`echo "4.LOGOUT"`
+e=`echo "5.EXIT"`
+echo "$a"
+echo "$b"
+echo "$c"
+echo "$d"
+echo "$e"
+echo "PRESS ENTER FOR SELECET"
+scroll $a $b $c $d $e
+case $i in
+1) clear
+   echo "ENTER NEW USER'S ID";read uid
+   echo "ENTER NEW USER'S PASSWORD";read pas
+   echo "ENTER USER TYPE";read type
+   echo "$uid,$pas,$type">>pass
+   echo "************* New user successfully added **************"
+   read -sn 1 abc
+   admin;;
+  2) clear
+ echo "USERNAME             PASSWORD            TYPE"
+ echo ""   
+ awk  -F"," '{printf "%-20s %-20s %-10s\n\n", $1,$2,$3 }'  pass
+ read -sn 1 abc
+ admin;;
+3) echo "ENTER USER ID";read uid
+   s=`awk  -F"," '$1=='$uid'  {print $3}'  pass`
+   if [ -z $s ]
+   then 
+   echo "user did not match"
+   elif [ $s = "a" ]
+     then
+     echo "CANNOD DELETE AS USER IS ADMIN"
+   elif [ $s = "l" ]
+     then
+     awk  -F"," '$1!='$uid'  {print $1,",",$2,",",$3}'  pass>>temp
+     mv temp pass
+     echo "USER (ADMINISTRATOR) DELETED"
+   elif [ $s = "s" ]
+     then
+     awk  -F"," '$1!='$uid'  {print $1,",",$2,",",$3}'  pass>>temp
+     mv temp pass
+     
+     echo "USER (STUDENT) DELETED"
+ fi 
+ read -sn 1 abc
+ admin;;
+4) logout;;
+5) exit 0;;
+esac
+}
+function stud
+{ clear
+  sid=$1
+echo "*************************STUDENT_ACCOUNT*****************"
+a=`echo "1.LIST_OF_BOOKS"`
+b=`echo "2.LIST_OF_ISSUED_BOOk"`
+c=`echo "3.VIEW_MY_DETAIL"`
+d=`echo "4.BOOK_SEARCH"`
+e=`echo "5.LOGOUT"`
+f=`echo "6.EXIT"`
+echo "$a"
+echo "$b"
+echo "$c"
+echo "$d"
+echo "$e"
+echo "$f"
+echo "PRESS ENTER TO SELECT"
+scroll $a $b $c $d $e $f
+case $i in 
+
+1) clear
+  echo "BOOKID           BOOK NAME          AUTHOR       PUBLICTION     STATUS"
+ echo ""
+ awk  -F"," '{printf "%-15s %-15s %-10s %-10s %d\n\n", $1,$2,$3,$4,$5 }'  r
+ read -sn 1 abc
+stud;;
+2) clear
+  echo "LIST OF SOLD BOOKS"
+  awk  -F"," '$5==0  {print $1,$2,$3,$4,$5}'  r
+  read -sn 1 abc
+stud;;
+3) 
+  ss=`grep $sid issue`
+  if [ -z ss ]
+  then
+  echo " NO BOOKS ISSUED "
+  elif [ -n ss ]
+  then
+  grep $sid issue
+  fi
+read -sn 1 abc 
+stud;;
+4)
+function search
+{ clear
+echo "************************SEARCHING BOOK ****************"
+g=`echo "1.IF_U_WNT_TO_SEARCH_BOOK_BY_AUTHOR"`
+h=`echo "2.FOR_U_WNT_TO_SEARCH_BOOK_BY_BOOK_NAME"`
+ii=`echo "3.FOR_IF_UWNT_TO_SEARCH_BOOK_BY_BOOK_CODE"`
+j=`echo "4.TO_RETURN_TO_PREVIOUS_MENU"`
+echo "$g"
+echo "$h"
+echo "$ii"
+echo "$j"
+echo "PRESS ENTER TO SELECT"
+scroll $g $h $ii $j
+case $i in
+1) echo "enter the book author "
+   read author
+echo "this author have these books"
+grep  $author r
+echo "the total book found is====>";grep $author r|wc -l
+grep $author r>newo
+echo "number of books available is=>"
+awk  -F"," '$5==1  {print $1,","$2,",",$3,",",$4,",",$5}' newo|wc -l
+rm newo
+read -sn 1 abc
+search
+;;
+
+2)   echo "enter the book_name"
+   read book_name
+  grep $book_name r
+echo "the total book found is====>";grep $book_name r|wc -l
+grep $book_name r>newo
+echo "number of books available is=>"
+awk  -F"," '$5==1  {print $1,","$2,",",$3,",",$4,",",$5}' newo|wc -l
+read -sn 1 abc
+search;;
+3) echo "enter the book_id"
+  read bid1
+awk  -F"," '$1=='$bid1'  {print $1,",",$2,",",$3,",",$4,",",$5}' r
+read -sn 1 abc
+search;;
+4) stud;;
+
+esac
+}
+search;;
+5) logout;;
+6) exit 1;;
+esac
+}
+
+   
+function lib1
+{ 
+  idpass=$1
+ clear
+echo "**************WELCOME LIBRARIAN********************"
+b=`echo "1.LIST_OF_BOOKS"`
+c=`echo "2.LIST_OF_ISSUED_BOOKS"`
+d=`echo "3.ISSUE_BOOK"`
+e=`echo "4.RETURN_BOOK"`
+f=`echo "5.BOOK'S_ISSUED_BY_STUDENT"`
+g=`echo "6.MODIFY_BOOK_RECORD"`
+h=`echo "7.ADD_BOOK"`
+ii=`echo "8.CHANGE_PASSWORD"`
+j=`echo "9.LOGOUT"`
+kk=`echo "10.EXIT"`
+echo "$b"
+echo "$c"
+echo "$d"
+echo "$e"
+echo "$f"
+echo "$g"
+echo "$h"
+echo "$ii"
+echo "$j"
+echo "$kk"
+echo "PRESS ENTER TO SELECT"
+scroll $b $c $d $e $f $g $h $ii $j $kk
+case $i in
+1) clear
+  echo "BOOKID           BOOK NAME          AUTHOR       PUBLICTION     STATUS"
+ echo ""
+ awk  -F"," '{printf "%-15s %-15s %-10s %-10s %d\n\n", $1,$2,$3,$4,$5 }'  r
+ read -sn 1 abc
+ lib1
+;;
+2) clear
+  echo "LIST OF ISSUED BOOKS"
+  awk  -F"," '$5==0  {print $1,$2,$3,$4,$5}'  r
+  read -sn 1 abc
+  lib1
+;;
+3) clear 
+echo "ENTER BOOK ID : "; read bid
+ string1=`awk  -F"," '$1=='$bid'  {print $1}'  r`
+# echo "$string1"
+ if [ -z $string1 ]
+ then
+ echo "INCORRECT BOOK ID"
+ read -sn 1 abc
+ lib1
+ elif [ -n $string1 ]
+ then
+  echo "BOOK DETAILS"
+  awk  -F"," '$1=='$bid'  {print "BOOK ID=",$1}' r
+  awk  -F"," '$1=='$bid'  {print "BOOK NAME=",$2}' r
+  awk  -F"," '$1=='$bid'  {print "AUTHOR=",$3}' r
+  awk  -F"," '$1=='$bid'  {print "PUBLISHER=",$4}' r
+  awk  -F"," '$1=='$bid'  {print "STATUS=",$5}' r
+  s=`awk  -F"," '$1=='$bid'  {print $5}' r`
+  if [ $s -eq 0 ]
+  then
+    echo "CANNOT BE ISSUED AS AlREADY ISSUED"
+  elif [ $s -eq 1 ]
+  then
+   awk  -F"," '$1!='$bid'  {print $1,",",$2,",",$3,",",$4,",",$5}'  r>temp1
+   m=`awk  -F"," '$1=='$bid'  {print $1,",",$2,",",$3,",",$4}'  r`
+   echo "$m,0">temp2
+   cat temp1 temp2 >r
+   rm temp1
+   rm temp2
+   echo Enter Enroll No;read sid
+   v=`awk  -F"," '$1=='$sid'  {print $1}' pass`
+   if [ -z v ]
+   then
+   echo " INCORECT USER ID "
+   read -sn 1 abc
+    lib1
+   else
+     dd1=`date +%d`
+     mm1=`date +%m`
+     yy1=`date +%y`
+     iss=`echo "$dd1/$mm1/$yy1"`
+     h=`awk  -F"," '$1=='$bid'  {print $2}'  r`
+     g=`awk  -F"," '$1=='$bid'  {print $3}'  r`
+     echo "$bid,$sid,$h,$g,$iss">>issue
+     echo "SUCCESSFULLY ISSUED TO $sid"
+   fi
+ fi
+fi
+read -sn 1 abc
+lib1
+;;
+4) clear
+echo "ENTER BOOK ID"
+ read bid
+ string1=`awk  -F"," '$1=='$bid'  {print $1}'  r`
+ #echo "$string1"
+ if [ -z $string1 ]
+ then
+ echo "INCORRECT BOOK ID"
+read -sn 1 abc
+lib1
+ elif [ -n $string1 ]
+   then
+   s=`awk  -F, '/'$bid'/  {print $5}'  r`
+   if [ $s -eq 1 ]
+     then
+     echo "BOOK HAS NOT BEEN ISSUED"
+    read -sn 1 abc
+   lib1
+    elif [ $s -eq 0 ]
+        then
+        awk  -F"," '$1!='$bid'  {print $1,","$2,",",$3,",",$4,",",$5}'  r>temp1
+        m=`awk  -F"," '$1=='$bid'  {print $1,",",$2,",",$3,",",$4}'  r`
+        echo "$m,1">temp2
+        cat temp1 temp2 >r
+        rm temp1
+        rm temp2
+       awk  -F"," '$1=='$bid'  {print $5}'  issue>tem
+        dd=`awk  -F"/" '{print $1}'  tem`  
+        mm=`awk  -F"/" '{print $2}'  tem`
+        yy=`awk  -F"/" '{print $3}'  tem`
+       	 rm tem        
+dd1=`date +%d`
+mm1=`date +%m`
+yy1=`date +%y`
+echo "RETURN DATE => $dd1/$mm1/$yy1 :"
+awk  -F"," '$1='$bid'  {print $1,",",$2,",",$3,",",$4,",",$5}'  issue
+
+D1=`echo "$yy$mm$dd"`
+E1=`date +%s -d"$D1"`
+E2=`date +%s` #present time
+((diff_sec=E2-E1))
+dday=`echo - | awk -v SECS=$diff_sec '{printf "%d",SECS/(60*60*24)}'`    
+if [ $dday -gt 20 ]
+ then
+  gg=`expr $dday - 20`
+  echo "delayed by $gg days"
+  echo "FINE PER DAY =>RS.10"
+  fine=`expr $gg \* 10`
+  echo "TOTAL FINE ON THIS BOOK => $fine"
+fi 
+awk  -F"," '$1!='$bid'  {print $1,","$2,",",$3,",",$4,",",$5}'  issue>temp1
+        cat temp1 > issue
+        rm temp1
+        echo "Book Successfully returned"
+   fi
+ fi
+read -sn 1 abc
+lib1
+;;
+5) clear
+  echo "ENTER ID OF STUDENT"
+  read sid
+  ss=`grep $sid issue`
+  if [ -z ss ]
+  then
+  echo " NO BOOKS ISSUED "
+  read -sn 1 abc
+  lib1
+  elif [ -n ss ]
+  then
+  grep $sid issue
+  fi
+read -sn 1 abc
+lib1
+;;
+6)
+function mod
+{ clear
+  a=`echo "1_FOR_BOOK_MODIFY"`
+  b=`echo "2_FOR_DELETING"`
+  c=`echo "3_FOR_RETURN_TO_MENU"`
+  echo "$a"
+  echo "$b"
+  echo "$c" 
+  echo "PRESS ENTER TO SELECT "
+  scroll $a $b $c
+  case $i in
+  1)echo "ENTER BOOK ID : "; read bid
+   str1=`awk  -F"," '$1=='$bid'  {print $1}'  r`
+# echo "$string1"
+ if [ -z $str1 ]
+ then
+ echo "INCORRECT BOOK ID"
+read -sn 1 abc
+mod
+
+ elif [ -n $str1 ]
+ then
+ awk  -F"," '$1!='$bid'  {print $1,","$2,",",$3,",",$4,",",$5}'  r>temp1
+ m=`awk  -F"," '$1=='$bid'  {print $3,",",$4,",",$5}'  r`
+ echo "ENTER NEW BOOK NAME "
+ read nbname
+ echo "$bid,$nbname,$m">temp2
+ cat temp1 temp2 >r
+ rm temp1
+ rm temp2
+read -sn 1 abc
+mod
+ fi
+;; 
+2) echo "enter the book id which data u wnt to delete"
+     read bid
+ string1=`awk  -F"," '$1=='$bid'  {print $1}'  r`
+ echo "$string1"
+ if [ -z $string1 ]
+ then
+ echo "INCORRECT BOOK ID"
+ read -sn 1 abc
+ mod
+ elif [ -n $string1 ]
+ then
+ awk  -F"," '$1!='$bid'  {print $1,","$2,",",$3,",",$4,",",$5}'  r>temp1
+ mv temp1 r
+ fi 
+echo "book successfully deleted"
+read -sn 1 abc
+mod;;
+3) lib1;;
+esac 
+}
+mod;;
+
+7)
+
+function ins
+{
+a=`echo "1.FOR_INSERT_BOOK"`
+b=`echo "2.TO_RETURN_TO_PREVIOUS_MENU"`
+echo "PRESS ENTER TO SELECT "
+scroll $a $b
+case $i in
+1)
+echo "enter the book_id to insert book"
+echo "enter the book id"
+read book_id
+echo "enter the bookname"
+read book_name
+echo "enter the book author"
+read author_name
+echo "enter the publisher"
+read  publisher
+echo "$book_id ,$book_name, $author_name,$publisher,1">>r
+ins;;
+2) echo""
+lib1
+;;
+*) echo "this is deafult enter 1 or 2";;
+esac
+}
+ins;;
+
+8) echo "ENTER OLD PASSWORD"
+   stty -echo
+   read pass1
+   p1=`awk  -F"," '$1=='$idpass'  {print $2}'  pass`
+   if [ -z $p1 ]
+   then
+   echo "PASSWORD DID NOT MATCH" 
+   stty echo
+   read -sn 1 abc
+   lib1
+   elif [ $pass1 = $p1 ]
+   then
+   echo "ENTER NEW PASSWORD: "
+   read npass 
+    grep -v $idpass  pass>>temp3
+    pk=`awk  -F"," '$1=='$idpass'  {print $3}'  pass`   
+    echo "$idpass,$npass,$pk">temp4
+    cat temp3 temp4 >pass
+    rm temp3
+    rm temp4
+    echo "PASSWORD CHANGED"
+    fi
+    stty echo	
+    read -sn 1 abc
+    lib1
+;;
+9) logout;;
+10) exit 0;;
+   esac
+}
+
+
+
+
+ function func()
+{ clear
+echo "ENTER USERNAME"
+   read u
+   s=`awk  -F"," '$1=='$u'  {print $2}'  pass`
+echo "ENTER PASSWORD"   
+stty -echo
+ read p 
+   if [ -z $s ]
+   then 
+   echo "USER DID NOT MATCH"
+  read -sn 1 abc 
+   stty echo
+  func
+  elif [ $s = $p ]
+     then
+     echo "SYSTEM SUCCESSFULLY LOGGED ON"
+       stty echo
+	read -sn 1 abc
+     y=`awk  -F"," '$1=='$u'  {print $3}'  pass`
+       if [ $y = "a" ]
+         then
+         echo "" 
+	admin
+       elif [ $y = "l" ]
+         then
+         echo "li" 
+	 lib1 $u
+       elif [ $y = "s" ]
+         then
+         echo "student" 
+	stud $u	
+       fi
+ 
+   elif [ $s != $p ]
+   then
+   echo "PASSWORD DID NOT MATCH"
+   read -sn 1 abc 
+   stty echo
+   func
+  fi
+  
+}
+func
